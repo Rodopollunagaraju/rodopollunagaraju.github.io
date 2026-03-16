@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Nagaraju Rodopollu — Portfolio</title>
+<script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#050714;
+  --bg2:#080c1a;
+  --glass:rgba(255,255,255,0.04);
+  --glass-border:rgba(255,255,255,0.08);
+  --v:#7c3aed;
+  --v2:#a855f7;
+  --v3:#c084fc;
+  --cyan:#06b6d4;
+  --cyan2:#22d3ee;
+  --text:#e2e8f0;
+  --muted:#64748b;
+  --muted2:#94a3b8;
+}
+html{scroll-behavior:smooth}
+body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;cursor:none;min-height:100vh}
+canvas#stars{position:fixed;inset:0;z-index:0;pointer-events:none}
+#app{position:relative;z-index:1}
+#cur{width:8px;height:8px;background:var(--v2);border-radius:50%;position:fixed;top:0;left:0;pointer-events:none;z-index:9999;mix-blend-mode:screen}
+#cur2{width:28px;height:28px;border:1px solid var(--v2);border-radius:50%;position:fixed;top:0;left:0;pointer-events:none;z-index:9998;opacity:.4;transition:all .15s ease}
+a,button{cursor:none}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:var(--bg2)}
+::-webkit-scrollbar-thumb{background:var(--v);border-radius:2px}
+@media(max-width:768px){
+  body{cursor:auto}
+  #cur,#cur2{display:none}
+  a,button{cursor:pointer}
+}
+</style>
+</head>
+<body>
+<canvas id="stars"></canvas>
+<div id="cur"></div>
+<div id="cur2"></div>
+<div id="app"></div>
+
+<script type="text/babel">
+const { useState, useEffect, useRef } = React;
+
+/* ─── DATA ─────────────────────────────────────────────── */
+const D = {
+  name: "Nagaraju Rodopollu",
+  email: "rodopollunagaraju@gmail.com",
+  phone: "+91 63013 14319",
+  github: "https://github.com/",         // ← replace
+  linkedin: "https://linkedin.com/in/",  // ← replace
+  roles: ["Full-Stack Developer", "MERN Stack Engineer", "Spring Boot Dev", "AWS Cloud Builder", "Docker Enthusiast"],
+  tagline: "Building systems that scale. Writing code that lasts.",
+  about: "Full-stack developer from Hyderabad, obsessed with clean architecture, secure backends, and interfaces people actually enjoy using. I work across the entire stack — React frontends, Node/Spring backends, and AWS cloud deployments.",
+  edu: [
+    { y: "2024–2027", s: "CBIT, Hyderabad",              d: "B.E. Information Technology",    g: "8.5" },
+    { y: "2021–2024", s: "Govt. Polytechnic, Hyderabad",  d: "Diploma — CS Engineering",       g: "9.3" },
+  ],
+  skills: [
+    { cat: "Languages",      col: "#7c3aed", items: ["Java", "Python", "JavaScript"] },
+    { cat: "Frontend",       col: "#06b6d4", items: ["React", "Tailwind CSS", "HTML5", "CSS3"] },
+    { cat: "Backend",        col: "#7c3aed", items: ["Node.js", "Express.js", "Spring Boot"] },
+    { cat: "Databases",      col: "#06b6d4", items: ["MongoDB", "MySQL"] },
+    { cat: "Cloud & DevOps", col: "#7c3aed", items: ["AWS EC2", "AWS S3", "AWS RDS", "Docker", "Jenkins", "CI/CD"] },
+    { cat: "Tools",          col: "#06b6d4", items: ["Git", "Postman", "Linux", "Bash"] },
+  ],
+  exp: [{
+    role: "Web Dev Intern",
+    co: "Crimson Innovation Technology",
+    period: "Dec 2023 – Apr 2024",
+    type: "Remote",
+    bullets: [
+      "Built MERN Loan Application System front-end — 20% faster feature delivery.",
+      "Enhanced UI/UX flows, boosting install rate by 15%.",
+      "React–MongoDB API integration via Node/Express — 12% lower response time.",
+    ]
+  }],
+  projects: [
+    {
+      n: "01", title: "Blood Donation System",
+      stack: ["MERN", "Docker", "AWS EC2", "MongoDB Atlas", "JWT"],
+      metric: "30%", ml: "Faster resolution", link: "#",
+      pts: [
+        "Optimised matching algorithm — 30% faster request resolution.",
+        "JWT + RBAC full data security layer.",
+        "MongoDB Atlas cloud data — 25% higher availability.",
+        "Docker on AWS EC2 for production infra.",
+      ]
+    },
+    {
+      n: "02", title: "Secure File Upload",
+      stack: ["AWS S3", "MERN", "IAM", "Pre-signed URLs"],
+      metric: "70%", ml: "Less backend load", link: "#",
+      pts: [
+        "Pre-signed URL architecture — 70% less backend load.",
+        "Strict IAM + private S3 buckets prevent data exposure.",
+        "40% upload perf gain via direct client-to-cloud.",
+        "React frontend + Node.js signed URL generation.",
+      ]
+    },
+    {
+      n: "03", title: "Tech Support Tickets",
+      stack: ["Spring Boot", "React", "Tailwind", "Spring Security", "JPA"],
+      metric: "100%", ml: "Automated workflows", link: "#",
+      pts: [
+        "IT ticketing platform replacing manual workflows.",
+        "Granular RBAC via Spring Security + JWT.",
+        "Spring Data JPA for high-volume query optimisation.",
+        "Real-time React + Tailwind CSS dashboard.",
+      ]
+    },
+  ]
+};
+
+/* ─── STARS CANVAS ──────────────────────────────────────── */
+function Stars() {
+  useEffect(() => {
+    const c = document.getElementById('stars');
+    const ctx = c.getContext('2d');
+    let W = c.width = window.innerWidth, H = c.height = window.innerHeight;
+    const stars = Array.from({ length: 200 }, () => ({
+      x: Math.random() * W, y: Math.random() * H,
+      r: Math.random() * 1.2 + .2,
+      a: Math.random(), s: Math.random() * .003 + .001
+    }));
+    let raf;
+    const draw = () => {
+      ctx.clearRect(0, 0, W, H);
+      stars.forEach(s => {
+        s.a += s.s;
+        if (s.a > 1 || s.a < 0) s.s *= -1;
+        ctx.globalAlpha = s.a * .6;
+        ctx.fillStyle = '#fff';
+        ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2); ctx.fill();
+      });
+      raf = requestAnimationFrame(draw);
+    };
+    draw();
+    const resize = () => { W = c.width = window.innerWidth; H = c.height = window.innerHeight; };
+    window.addEventListener('resize', resize);
+    return () => { cancelAnimationFrame(raf); window.removeEventListener('resize', resize); };
+  }, []);
+  return null;
+}
+
+/* ─── CURSOR ────────────────────────────────────────────── */
+function Cursor() {
+  useEffect(() => {
+    const c = document.getElementById('cur'), t = document.getElementById('cur2');
+    if (!c || !t) return;
+    let mx = 0, my = 0, tx = 0, ty = 0;
+    const m = e => { mx = e.clientX; my = e.clientY; c.style.transform = `translate(${mx - 4}px,${my - 4}px)`; };
+    const a = () => { tx += (mx - tx) * .1; ty += (my - ty) * .1; t.style.transform = `translate(${tx - 14}px,${ty - 14}px)`; requestAnimationFrame(a); };
+    document.addEventListener('mousemove', m); a();
+    return () => document.removeEventListener('mousemove', m);
+  }, []);
+  return null;
+}
+
+/* ─── SCROLL BAR ────────────────────────────────────────── */
+function ScrollBar() {
+  const [p, setP] = useState(0);
+  useEffect(() => {
+    const f = () => setP(Math.min(100, (window.scrollY / (document.body.scrollHeight - window.innerHeight)) * 100));
+    window.addEventListener('scroll', f);
+    return () => window.removeEventListener('scroll', f);
+  }, []);
+  return <div style={{ position: 'fixed', top: 0, left: 0, height: '2px', width: p + '%', background: 'linear-gradient(90deg,var(--v),var(--cyan2))', zIndex: 200 }} />;
+}
+
+/* ─── GLASS CARD ────────────────────────────────────────── */
+function GlassCard({ children, style = {}, hov = true }) {
+  const [h, setH] = useState(false);
+  return (
+    <div
+      onMouseEnter={() => hov && setH(true)}
+      onMouseLeave={() => hov && setH(false)}
+      style={{
+        background: h ? 'rgba(124,58,237,0.08)' : 'var(--glass)',
+        border: `1px solid ${h ? 'rgba(124,58,237,0.4)' : 'var(--glass-border)'}`,
+        borderRadius: '16px', backdropFilter: 'blur(12px)',
+        transition: 'all .3s ease',
+        transform: h ? 'translateY(-4px)' : 'none',
+        ...style
+      }}>
+      {children}
+    </div>
+  );
+}
+
+/* ─── TAG ───────────────────────────────────────────────── */
+function Tag({ children, color = 'var(--v)' }) {
+  return (
+    <span style={{
+      fontSize: '.62rem', padding: '.18rem .55rem',
+      border: `1px solid ${color}40`, borderRadius: '4px',
+      color, fontFamily: 'JetBrains Mono',
+      background: `${color}10`, letterSpacing: '.04em'
+    }}>{children}</span>
+  );
+}
+
+/* ─── SECTION LABEL ─────────────────────────────────────── */
+function SecLabel({ tag }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: '.6rem', marginBottom: '.75rem' }}>
+      <div style={{ width: '20px', height: '1px', background: 'var(--v2)' }} />
+      <span style={{ fontFamily: 'JetBrains Mono', fontSize: '.6rem', color: 'var(--v3)', letterSpacing: '.25em', textTransform: 'uppercase' }}>{tag}</span>
+    </div>
+  );
+}
+
+/* ─── GRADIENT HEADING ──────────────────────────────────── */
+const GradText = ({ children }) => (
+  <span style={{ background: 'linear-gradient(135deg,var(--v2),var(--cyan2))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+    {children}
+  </span>
+);
+
+const H2 = ({ children }) => (
+  <h2 style={{ fontFamily: 'Outfit', fontWeight: 900, fontSize: 'clamp(2rem,4vw,2.8rem)', letterSpacing: '-.02em', marginBottom: '3rem', lineHeight: 1.1 }}>
+    {children}
+  </h2>
+);
+
+/* ─── NAV ───────────────────────────────────────────────── */
+function Nav({ active }) {
+  const links = ["about", "skills", "experience", "projects", "contact"];
+  return (
+    <nav style={{
+      position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
+      padding: '.9rem 2.5rem',
+      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+      background: 'rgba(5,7,20,0.85)', backdropFilter: 'blur(20px)',
+      borderBottom: '1px solid var(--glass-border)'
+    }}>
+      <div style={{ fontFamily: 'JetBrains Mono', fontSize: '.85rem', color: 'var(--v2)', letterSpacing: '.05em' }}>
+        <span style={{ color: 'var(--cyan2)' }}>nr</span>.dev
+      </div>
+      <div style={{ display: 'flex', gap: '1.75rem', alignItems: 'center' }}>
+        {links.map(l => (
+          <a key={l} href={`#${l}`} style={{
+            textDecoration: 'none', fontSize: '.72rem', letterSpacing: '.12em',
+            textTransform: 'uppercase', fontFamily: 'JetBrains Mono',
+            color: active === l ? 'var(--v3)' : 'var(--muted2)',
+            position: 'relative', transition: 'color .2s',
+            paddingBottom: '4px',
+            borderBottom: active === l ? '1px solid var(--v2)' : '1px solid transparent'
+          }}>{l}</a>
+        ))}
+      </div>
+    </nav>
+  );
+}
+
+/* ─── HERO ──────────────────────────────────────────────── */
+function Hero() {
+  const [ri, setRi] = useState(0);
+  const [show, setShow] = useState(true);
+  useEffect(() => {
+    const id = setInterval(() => {
+      setShow(false);
+      setTimeout(() => { setRi(r => (r + 1) % D.roles.length); setShow(true); }, 350);
+    }, 2400);
+    return () => clearInterval(id);
+  }, []);
+
+  return (
+    <section id="hero" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', padding: '7rem 2.5rem 4rem', position: 'relative', overflow: 'hidden' }}>
+      {/* Ambient glow orbs */}
+      <div style={{ position: 'absolute', top: '20%', right: '10%', width: '420px', height: '420px', borderRadius: '50%', background: 'radial-gradient(circle,rgba(124,58,237,0.12) 0%,transparent 70%)', pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', bottom: '15%', left: '3%', width: '320px', height: '320px', borderRadius: '50%', background: 'radial-gradient(circle,rgba(6,182,212,0.08) 0%,transparent 70%)', pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', top: '60%', right: '30%', width: '200px', height: '200px', borderRadius: '50%', background: 'radial-gradient(circle,rgba(168,85,247,0.06) 0%,transparent 70%)', pointerEvents: 'none' }} />
+
+      <div style={{ maxWidth: '920px', position: 'relative', zIndex: 1 }}>
+        <SecLabel tag="Portfolio 2024" />
+
+        {/* Availability badge */}
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '.5rem', padding: '.35rem .9rem', background: 'rgba(6,182,212,0.08)', border: '1px solid rgba(6,182,212,0.25)', borderRadius: '100px', marginBottom: '2rem' }}>
+          <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--cyan2)', boxShadow: '0 0 6px var(--cyan2)' }} />
+          <span style={{ fontFamily: 'JetBrains Mono', fontSize: '.62rem', color: 'var(--cyan2)', letterSpacing: '.1em' }}>OPEN TO WORK</span>
+        </div>
+
+        <h1 style={{ fontFamily: 'Outfit', fontWeight: 900, fontSize: 'clamp(3.2rem,9vw,7rem)', lineHeight: .92, letterSpacing: '-.03em', marginBottom: '1.2rem' }}>
+          <span style={{ display: 'block', color: 'var(--text)' }}>NAGARAJU</span>
+          <GradText>RODOPOLLU</GradText>
+        </h1>
+
+        {/* Role switcher */}
+        <div style={{ height: '2rem', overflow: 'hidden', marginBottom: '1.5rem' }}>
+          <div style={{
+            fontFamily: 'JetBrains Mono', fontSize: '.95rem', color: 'var(--muted2)',
+            opacity: show ? 1 : 0, transform: show ? 'translateY(0)' : 'translateY(8px)', transition: 'all .3s ease'
+          }}>
+            <span style={{ color: 'var(--v3)' }}>›</span> {D.roles[ri]}
+          </div>
+        </div>
+
+        <p style={{ maxWidth: '500px', lineHeight: 1.85, color: 'var(--muted2)', fontSize: '.9rem', marginBottom: '2.5rem' }}>
+          <strong style={{ color: 'var(--text)', fontWeight: 600 }}>{D.tagline}</strong>
+          <br />
+          <span style={{ color: 'var(--muted)', fontSize: '.82rem' }}>{D.about}</span>
+        </p>
+
+        {/* CTA buttons */}
+        <div style={{ display: 'flex', gap: '.75rem', flexWrap: 'wrap' }}>
+          <a href="#projects" style={{ display: 'inline-flex', alignItems: 'center', gap: '.5rem', padding: '.75rem 1.75rem', background: 'linear-gradient(135deg,var(--v),var(--v2))', color: '#fff', fontFamily: 'JetBrains Mono', fontSize: '.72rem', textDecoration: 'none', letterSpacing: '.08em', borderRadius: '8px', fontWeight: 500 }}>VIEW PROJECTS →</a>
+          <a href="#contact" style={{ display: 'inline-flex', alignItems: 'center', gap: '.5rem', padding: '.75rem 1.75rem', background: 'transparent', color: 'var(--v3)', fontFamily: 'JetBrains Mono', fontSize: '.72rem', textDecoration: 'none', letterSpacing: '.08em', border: '1px solid rgba(168,85,247,.4)', borderRadius: '8px' }}>GET IN TOUCH</a>
+          <a href={`mailto:${D.email}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '.5rem', padding: '.75rem 1.75rem', background: 'rgba(6,182,212,.08)', color: 'var(--cyan2)', fontFamily: 'JetBrains Mono', fontSize: '.72rem', textDecoration: 'none', letterSpacing: '.08em', border: '1px solid rgba(6,182,212,.25)', borderRadius: '8px' }}>EMAIL ME</a>
+        </div>
+
+        {/* Stats */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '1px', marginTop: '3.5rem', paddingTop: '2.5rem', borderTop: '1px solid var(--glass-border)', maxWidth: '480px' }}>
+          {[['3+', 'Projects'], ['8.5', 'GPA'], ['5mo', 'Exp.'], ['10+', 'Skills']].map(([n, l]) => (
+            <div key={l} style={{ paddingRight: '1rem' }}>
+              <div style={{ fontFamily: 'Outfit', fontWeight: 900, fontSize: '2rem', background: 'linear-gradient(135deg,var(--v2),var(--cyan2))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', lineHeight: 1 }}>{n}</div>
+              <div style={{ fontSize: '.6rem', color: 'var(--muted)', letterSpacing: '.15em', textTransform: 'uppercase', marginTop: '.2rem', fontFamily: 'JetBrains Mono' }}>{l}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ─── ABOUT ─────────────────────────────────────────────── */
+function About() {
+  return (
+    <section id="about" style={{ padding: '6rem 2.5rem', borderTop: '1px solid var(--glass-border)' }}>
+      <div style={{ maxWidth: '1100px', margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: '4rem', alignItems: 'start' }}>
+        <div>
+          <SecLabel tag="About" />
+          <H2>The Engineer<br /><GradText>Behind the Code</GradText></H2>
+          <p style={{ fontSize: '.88rem', lineHeight: 1.9, color: 'var(--muted2)', marginBottom: '1rem' }}>{D.about}</p>
+          <p style={{ fontSize: '.85rem', lineHeight: 1.9, color: 'var(--muted)', marginBottom: '2rem' }}>
+            Currently pursuing B.E. in IT at <span style={{ color: 'var(--v3)' }}>CBIT Hyderabad</span> while shipping real projects with modern cloud-native stacks.
+          </p>
+          <div style={{ display: 'flex', gap: '.75rem', flexWrap: 'wrap' }}>
+            {['AWS', 'MERN', 'Docker', 'Spring Boot'].map(t => <Tag key={t}>{t}</Tag>)}
+          </div>
+        </div>
+        <div>
+          <div style={{ fontFamily: 'JetBrains Mono', fontSize: '.6rem', color: 'var(--muted)', letterSpacing: '.2em', textTransform: 'uppercase', marginBottom: '1.25rem' }}>// Education</div>
+          {D.edu.map((e, i) => (
+            <GlassCard key={i} style={{ padding: '1.5rem', marginBottom: '1rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '.75rem', flexWrap: 'wrap', gap: '.5rem' }}>
+                <div>
+                  <div style={{ fontFamily: 'Outfit', fontWeight: 700, fontSize: '1rem', color: 'var(--text)', marginBottom: '.2rem' }}>{e.s}</div>
+                  <div style={{ fontSize: '.78rem', color: 'var(--muted2)' }}>{e.d}</div>
+                </div>
+                <span style={{ fontFamily: 'JetBrains Mono', fontSize: '.62rem', color: 'var(--cyan2)', border: '1px solid rgba(6,182,212,.3)', padding: '.2rem .6rem', borderRadius: '4px', whiteSpace: 'nowrap' }}>{e.y}</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '.75rem' }}>
+                <div style={{ flex: 1, height: '3px', background: 'var(--glass-border)', borderRadius: '2px' }}>
+                  <div style={{ width: (parseFloat(e.g) / 10 * 100) + '%', height: '100%', background: 'linear-gradient(90deg,var(--v),var(--cyan2))', borderRadius: '2px' }} />
+                </div>
+                <span style={{ fontFamily: 'JetBrains Mono', fontSize: '.65rem', color: 'var(--v3)', whiteSpace: 'nowrap' }}>GPA {e.g}</span>
+              </div>
+            </GlassCard>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ─── SKILLS ────────────────────────────────────────────── */
+function Skills() {
+  const [hov, setHov] = useState(null);
+  return (
+    <section id="skills" style={{ padding: '6rem 2.5rem', borderTop: '1px solid var(--glass-border)' }}>
+      <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
+        <SecLabel tag="Tech Stack" />
+        <H2>Tools of the <GradText>Trade</GradText></H2>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(170px,1fr))', gap: '1rem' }}>
+          {D.skills.map((s, i) => (
+            <div key={i}
+              onMouseEnter={() => setHov(i)}
+              onMouseLeave={() => setHov(null)}
+              style={{
+                padding: '1.4rem', borderRadius: '12px',
+                background: hov === i ? `${s.col}12` : 'var(--glass)',
+                border: `1px solid ${hov === i ? s.col + '60' : 'var(--glass-border)'}`,
+                transition: 'all .25s', transform: hov === i ? 'translateY(-4px)' : 'none'
+              }}>
+              <div style={{ fontFamily: 'JetBrains Mono', fontSize: '.58rem', letterSpacing: '.2em', textTransform: 'uppercase', color: s.col, marginBottom: '.85rem' }}>{s.cat}</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '.35rem' }}>
+                {s.items.map(t => (
+                  <span key={t} style={{ fontSize: '.65rem', padding: '.18rem .5rem', border: `1px solid ${hov === i ? s.col + '40' : 'rgba(255,255,255,0.08)'}`, borderRadius: '4px', color: hov === i ? s.col : 'var(--muted2)', fontFamily: 'JetBrains Mono', transition: 'all .2s' }}>{t}</span>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ─── EXPERIENCE ────────────────────────────────────────── */
+function Experience() {
+  return (
+    <section id="experience" style={{ padding: '6rem 2.5rem', borderTop: '1px solid var(--glass-border)' }}>
+      <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
+        <SecLabel tag="Experience" />
+        <H2>Where I've <GradText>Worked</GradText></H2>
+        {D.exp.map((e, i) => (
+          <GlassCard key={i} hov={false} style={{ padding: '2.5rem', position: 'relative', overflow: 'hidden' }}>
+            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '2px', background: 'linear-gradient(90deg,var(--v),var(--cyan2))' }} />
+            <div style={{ position: 'absolute', top: '-60px', right: '-60px', width: '200px', height: '200px', borderRadius: '50%', background: 'radial-gradient(circle,rgba(124,58,237,0.07) 0%,transparent 70%)', pointerEvents: 'none' }} />
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.75rem', flexWrap: 'wrap', gap: '1rem' }}>
+              <div>
+                <div style={{ fontFamily: 'Outfit', fontWeight: 700, fontSize: '1.4rem', color: 'var(--text)', marginBottom: '.3rem' }}>{e.role}</div>
+                <div style={{ fontFamily: 'JetBrains Mono', fontSize: '.75rem', color: 'var(--v3)' }}>{e.co}</div>
+              </div>
+              <div style={{ display: 'flex', gap: '.5rem', flexWrap: 'wrap' }}>
+                <span style={{ fontFamily: 'JetBrains Mono', fontSize: '.62rem', color: 'var(--muted2)', background: 'rgba(255,255,255,0.04)', border: '1px solid var(--glass-border)', padding: '.25rem .7rem', borderRadius: '100px' }}>{e.period}</span>
+                <span style={{ fontFamily: 'JetBrains Mono', fontSize: '.62rem', color: 'var(--cyan2)', background: 'rgba(6,182,212,.08)', border: '1px solid rgba(6,182,212,.3)', padding: '.25rem .7rem', borderRadius: '100px' }}>{e.type}</span>
+              </div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(260px,1fr))', gap: '.75rem' }}>
+              {e.bullets.map((b, j) => (
+                <div key={j} style={{ display: 'flex', gap: '.75rem', padding: '.85rem 1rem', background: 'rgba(255,255,255,0.02)', borderRadius: '8px', border: '1px solid var(--glass-border)' }}>
+                  <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--v2)', flexShrink: 0, marginTop: '.35rem' }} />
+                  <span style={{ fontSize: '.82rem', color: 'var(--muted2)', lineHeight: 1.65 }}>{b}</span>
+                </div>
+              ))}
+            </div>
+          </GlassCard>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+/* ─── PROJECTS ──────────────────────────────────────────── */
+function Projects() {
+  const [hov, setHov] = useState(null);
+  return (
+    <section id="projects" style={{ padding: '6rem 2.5rem', borderTop: '1px solid var(--glass-border)' }}>
+      <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
+        <SecLabel tag="Projects" />
+        <H2>Things I've <GradText>Built</GradText></H2>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(300px,1fr))', gap: '1.25rem' }}>
+          {D.projects.map((p, i) => (
+            <div key={i}
+              onMouseEnter={() => setHov(i)}
+              onMouseLeave={() => setHov(null)}
+              style={{
+                padding: '2rem', borderRadius: '16px',
+                background: hov === i ? 'rgba(124,58,237,0.08)' : 'var(--glass)',
+                border: `1px solid ${hov === i ? 'rgba(124,58,237,0.45)' : 'var(--glass-border)'}`,
+                backdropFilter: 'blur(12px)', transition: 'all .3s ease',
+                transform: hov === i ? 'translateY(-6px)' : 'none',
+                display: 'flex', flexDirection: 'column', position: 'relative', overflow: 'hidden'
+              }}>
+              {hov === i && <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '2px', background: 'linear-gradient(90deg,var(--v),var(--cyan2))' }} />}
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.25rem' }}>
+                <div style={{ fontFamily: 'JetBrains Mono', fontSize: '2.5rem', fontWeight: 500, color: 'rgba(124,58,237,0.15)', lineHeight: 1 }}>{p.n}</div>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontFamily: 'Outfit', fontWeight: 900, fontSize: '1.6rem', background: 'linear-gradient(135deg,var(--v2),var(--cyan2))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', lineHeight: 1 }}>{p.metric}</div>
+                  <div style={{ fontFamily: 'JetBrains Mono', fontSize: '.55rem', color: 'var(--muted)', letterSpacing: '.1em', textTransform: 'uppercase', marginTop: '.1rem' }}>{p.ml}</div>
+                </div>
+              </div>
+
+              <div style={{ fontFamily: 'Outfit', fontWeight: 700, fontSize: '1.1rem', color: 'var(--text)', marginBottom: '.75rem' }}>{p.title}</div>
+
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '.35rem', marginBottom: '1.25rem' }}>
+                {p.stack.map(t => <Tag key={t} color={hov === i ? 'var(--v3)' : 'var(--muted)'}>{t}</Tag>)}
+              </div>
+
+              <ul style={{ listStyle: 'none', flex: 1 }}>
+                {p.pts.map((b, j) => (
+                  <li key={j} style={{ fontSize: '.75rem', color: 'var(--muted2)', lineHeight: 1.7, padding: '.2rem 0', display: 'flex', gap: '.5rem' }}>
+                    <span style={{ color: 'var(--v3)', flexShrink: 0, fontSize: '.65rem', marginTop: '.15rem' }}>›</span>{b}
+                  </li>
+                ))}
+              </ul>
+
+              <div style={{ marginTop: '1.5rem', paddingTop: '1rem', borderTop: '1px solid var(--glass-border)' }}>
+                <a href={p.link} style={{ fontFamily: 'JetBrains Mono', fontSize: '.62rem', color: hov === i ? 'var(--v3)' : 'var(--muted)', textDecoration: 'none', letterSpacing: '.08em', textTransform: 'uppercase', transition: 'color .2s' }}>VIEW ON GITHUB →</a>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ─── CONTACT ───────────────────────────────────────────── */
+function Contact() {
+  const [hov, setHov] = useState(null);
+  const links = [
+    { l: 'Email',    v: D.email,           h: `mailto:${D.email}`,                ic: '@'  },
+    { l: 'Phone',    v: D.phone,           h: `tel:${D.phone.replace(/\s/g, '')}`, ic: '☎' },
+    { l: 'GitHub',   v: 'github.com',      h: D.github,                            ic: 'GH' },
+    { l: 'LinkedIn', v: 'linkedin.com/in', h: D.linkedin,                          ic: 'in' },
+  ];
+  return (
+    <section id="contact" style={{ padding: '6rem 2.5rem', borderTop: '1px solid var(--glass-border)', position: 'relative', overflow: 'hidden' }}>
+      <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: '600px', height: '600px', borderRadius: '50%', background: 'radial-gradient(circle,rgba(124,58,237,0.06) 0%,transparent 70%)', pointerEvents: 'none' }} />
+      <div style={{ maxWidth: '1100px', margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: '5rem', alignItems: 'center', position: 'relative', zIndex: 1 }}>
+        <div>
+          <SecLabel tag="Contact" />
+          <h2 style={{ fontFamily: 'Outfit', fontWeight: 900, fontSize: 'clamp(2.5rem,5vw,4rem)', letterSpacing: '-.03em', lineHeight: 1, marginBottom: '1.5rem' }}>
+            Let's Build<br /><GradText>Something</GradText><br />Great
+          </h2>
+          <p style={{ fontSize: '.88rem', color: 'var(--muted2)', lineHeight: 1.9, marginBottom: '2rem' }}>
+            Based in Hyderabad · Open to remote roles<br />Available for internships &amp; full-time positions.
+          </p>
+          <a href={`mailto:${D.email}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '.6rem', padding: '.8rem 2rem', background: 'linear-gradient(135deg,var(--v),var(--v2))', color: '#fff', fontFamily: 'JetBrains Mono', fontSize: '.72rem', textDecoration: 'none', letterSpacing: '.08em', borderRadius: '8px', fontWeight: 500 }}>SEND EMAIL →</a>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '.75rem' }}>
+          {links.map((l, i) => (
+            <a key={i} href={l.h}
+              onMouseEnter={() => setHov(i)}
+              onMouseLeave={() => setHov(null)}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '1rem', padding: '1rem 1.25rem',
+                background: hov === i ? 'rgba(124,58,237,0.1)' : 'var(--glass)',
+                border: `1px solid ${hov === i ? 'rgba(124,58,237,0.4)' : 'var(--glass-border)'}`,
+                borderRadius: '12px', textDecoration: 'none', transition: 'all .25s',
+                transform: hov === i ? 'translateX(6px)' : 'none', backdropFilter: 'blur(8px)'
+              }}>
+              <div style={{ width: '36px', height: '36px', border: `1px solid ${hov === i ? 'rgba(168,85,247,.5)' : 'var(--glass-border)'}`, borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'JetBrains Mono', fontSize: '.72rem', color: hov === i ? 'var(--v3)' : 'var(--muted)', flexShrink: 0, transition: 'all .25s' }}>{l.ic}</div>
+              <div>
+                <div style={{ fontSize: '.58rem', fontFamily: 'JetBrains Mono', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.15em', marginBottom: '.15rem' }}>{l.l}</div>
+                <div style={{ fontSize: '.8rem', color: hov === i ? 'var(--text)' : 'var(--muted2)', transition: 'color .2s' }}>{l.v}</div>
+              </div>
+            </a>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ─── FOOTER ────────────────────────────────────────────── */
+function Footer() {
+  return (
+    <footer style={{ borderTop: '1px solid var(--glass-border)', padding: '1.5rem 2.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+      <div style={{ fontFamily: 'JetBrains Mono', fontSize: '.72rem', color: 'var(--v2)', letterSpacing: '.05em' }}>
+        <span style={{ color: 'var(--cyan2)' }}>nr</span>.dev
+      </div>
+      <div style={{ fontFamily: 'JetBrains Mono', fontSize: '.6rem', color: 'var(--muted)', letterSpacing: '.1em' }}>
+        NAGARAJU RODOPOLLU · HYDERABAD · 2024
+      </div>
+    </footer>
+  );
+}
+
+/* ─── APP ───────────────────────────────────────────────── */
+function App() {
+  const [active, setActive] = useState('');
+  useEffect(() => {
+    const secs = ['about', 'skills', 'experience', 'projects', 'contact'];
+    const fn = () => {
+      const y = window.scrollY + 130;
+      for (const id of secs) {
+        const el = document.getElementById(id);
+        if (el && y >= el.offsetTop && y < el.offsetTop + el.offsetHeight) { setActive(id); return; }
+      }
+      setActive('');
+    };
+    window.addEventListener('scroll', fn);
+    return () => window.removeEventListener('scroll', fn);
+  }, []);
+
+  return (
+    <>
+      <Stars />
+      <Cursor />
+      <ScrollBar />
+      <Nav active={active} />
+      <Hero />
+      <About />
+      <Skills />
+      <Experience />
+      <Projects />
+      <Contact />
+      <Footer />
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('app')).render(<App />);
+</script>
+</body>
+</html>
